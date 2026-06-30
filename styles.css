@@ -112,6 +112,26 @@ body {
 .refresh-btn:hover { background: var(--kellogg-purple-dark); }
 .refresh-btn:disabled { opacity: 0.6; cursor: default; }
 
+.directory-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kellogg-purple);
+  background: #fff;
+  border: 1px solid var(--kellogg-purple);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.directory-btn:hover { background: rgba(74, 31, 96, 0.07); }
+.directory-btn.active { background: var(--kellogg-purple); color: #fff; }
+.directory-icon { font-size: 14px; line-height: 1; }
+
 .refresh-icon { font-size: 16px; line-height: 1; }
 .refresh-btn.spinning .refresh-icon {
   animation: spin 0.8s linear infinite;
@@ -227,6 +247,49 @@ body {
 }
 
 .panel.open { transform: translateX(0); }
+
+/* Directory slides in from the left so it can sit opposite the city panel. */
+.panel-left {
+  right: auto;
+  left: 0;
+  transform: translateX(-105%);
+}
+
+.panel-left.open { transform: translateX(0); }
+
+.directory-search-wrap {
+  flex: 0 0 auto;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.directory-search {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.directory-search:focus {
+  border-color: var(--kellogg-purple);
+  box-shadow: 0 0 0 3px rgba(74, 31, 96, 0.12);
+}
+
+.panel-empty {
+  padding: 20px;
+  font-size: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.person-city {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
 
 .panel-header {
   flex: 0 0 auto;

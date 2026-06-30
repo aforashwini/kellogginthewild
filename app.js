@@ -19,6 +19,12 @@
     statCities: document.getElementById("stat-cities"),
     search: document.getElementById("search"),
     refreshBtn: document.getElementById("refresh-btn"),
+    directoryBtn: document.getElementById("directory-btn"),
+    directory: document.getElementById("directory"),
+    directoryCount: document.getElementById("directory-count"),
+    directoryList: document.getElementById("directory-list"),
+    directoryClose: document.getElementById("directory-close"),
+    directorySearch: document.getElementById("directory-search"),
     status: document.getElementById("status"),
     statusSpinner: document.getElementById("status-spinner"),
     statusMessage: document.getElementById("status-message"),
@@ -34,8 +40,11 @@
   var map;
   var markers = {}; // city -> { marker, people, coords }
   var citiesData = {}; // city -> people[]  (current data set)
+  var allPeople = []; // flat alphabetical list for the directory
   var openCity = null; // city name whose panel is open, or null
   var searchTerm = "";
+  var directoryOpen = false;
+  var directoryTerm = "";
   var hasLoadedOnce = false;
 
   // ---------- Map setup ----------
@@ -155,39 +164,46 @@
       .replace(/"/g, "&quot;");
   }
 
+  function personHtml(p, showCity) {
+    var liLinked = p.linkedin
+      ? '<a class="person-link" href="' +
+        escapeHtml(p.linkedin) +
+        '" target="_blank" rel="noopener noreferrer">LinkedIn</a>'
+      : '<span class="person-link disabled">LinkedIn</span>';
+    var emailLink = p.email
+      ? '<a class="person-link" href="mailto:' +
+        escapeHtml(p.email) +
+        '">Email</a>'
+      : '<span class="person-link disabled">Email</span>';
+    var cityLine = showCity
+      ? '<div class="person-city">' + escapeHtml(p.city) + "</div>"
+      : "";
+    return (
+      '<li class="person"><div class="person-name">' +
+      escapeHtml(p.name) +
+      "</div>" +
+      cityLine +
+      '<div class="person-links">' +
+      liLinked +
+      emailLink +
+      "</div></li>"
+    );
+  }
+
   function renderPanel(city) {
     var people = citiesData[city] || [];
     els.panelCity.textContent = city;
     els.panelCount.textContent =
       people.length + (people.length === 1 ? " classmate" : " classmates");
-
-    var html = people
+    els.panelList.innerHTML = people
       .map(function (p) {
-        var liLinked = p.linkedin
-          ? '<a class="person-link" href="' +
-            escapeHtml(p.linkedin) +
-            '" target="_blank" rel="noopener noreferrer">LinkedIn</a>'
-          : '<span class="person-link disabled">LinkedIn</span>';
-        var emailLink = p.email
-          ? '<a class="person-link" href="mailto:' +
-            escapeHtml(p.email) +
-            '">Email</a>'
-          : '<span class="person-link disabled">Email</span>';
-        return (
-          '<li class="person"><div class="person-name">' +
-          escapeHtml(p.name) +
-          '</div><div class="person-links">' +
-          liLinked +
-          emailLink +
-          "</div></li>"
-        );
+        return personHtml(p, false);
       })
       .join("");
-
-    els.panelList.innerHTML = html;
   }
 
   function openPanel(city) {
+    closeDirectory();
     openCity = city;
     renderPanel(city);
     els.panel.classList.add("open");
@@ -198,6 +214,53 @@
     openCity = null;
     els.panel.classList.remove("open");
     els.panel.setAttribute("aria-hidden", "true");
+  }
+
+  // ---------- Directory (everyone, alphabetical) ----------
+  function renderDirectory() {
+    var term = directoryTerm;
+    var people = term
+      ? allPeople.filter(function (p) {
+          return (
+            p.name.toLowerCase().indexOf(term) !== -1 ||
+            p.city.toLowerCase().indexOf(term) !== -1
+          );
+        })
+      : allPeople;
+
+    els.directoryCount.textContent =
+      allPeople.length + (allPeople.length === 1 ? " classmate" : " classmates");
+
+    if (!people.length) {
+      els.directoryList.innerHTML =
+        '<li class="panel-empty">No classmates match “' +
+        escapeHtml(directoryTerm) +
+        "”.</li>";
+      return;
+    }
+
+    els.directoryList.innerHTML = people
+      .map(function (p) {
+        return personHtml(p, true);
+      })
+      .join("");
+  }
+
+  function openDirectory() {
+    closePanel();
+    directoryOpen = true;
+    renderDirectory();
+    els.directory.classList.add("open");
+    els.directory.setAttribute("aria-hidden", "false");
+    els.directoryBtn.classList.add("active");
+    els.directorySearch.focus();
+  }
+
+  function closeDirectory() {
+    directoryOpen = false;
+    els.directory.classList.remove("open");
+    els.directory.setAttribute("aria-hidden", "true");
+    els.directoryBtn.classList.remove("active");
   }
 
   // ---------- Stats ----------
@@ -242,9 +305,27 @@
       totalPeople++;
     });
 
+    // Sort each city's classmates alphabetically by name.
+    Object.keys(byCity).forEach(function (city) {
+      byCity[city].sort(byName);
+    });
+
     citiesData = byCity;
+
+    // Flat, alphabetical list of everyone for the directory view.
+    allPeople = [];
+    Object.keys(byCity).forEach(function (city) {
+      allPeople = allPeople.concat(byCity[city]);
+    });
+    allPeople.sort(byName);
+
     rebuildMarkers();
+    if (directoryOpen) renderDirectory();
     updateStats(totalPeople, Object.keys(byCity).length);
+  }
+
+  function byName(a, b) {
+    return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
   }
 
   var isFetching = false;
@@ -315,8 +396,28 @@
 
     els.panelClose.addEventListener("click", closePanel);
 
+    els.directoryBtn.addEventListener("click", function () {
+      if (directoryOpen) closeDirectory();
+      else openDirectory();
+    });
+
+    els.directoryClose.addEventListener("click", closeDirectory);
+
+    var dirDebounce;
+    els.directorySearch.addEventListener("input", function (e) {
+      var value = e.target.value;
+      clearTimeout(dirDebounce);
+      dirDebounce = setTimeout(function () {
+        directoryTerm = trim(value).toLowerCase();
+        renderDirectory();
+      }, 120);
+    });
+
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") closePanel();
+      if (e.key === "Escape") {
+        closePanel();
+        closeDirectory();
+      }
     });
 
     var searchDebounce;
