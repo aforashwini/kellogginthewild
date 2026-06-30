@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kellogg In the Wild</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-left">
+      <h1 class="app-title">Kellogg In the Wild</h1>
+      <div class="stats" id="stats">
+        <span id="stat-people">— classmates</span>
+        <span class="stat-divider">·</span>
+        <span id="stat-cities">— cities</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="search-wrap">
+        <input
+          type="search"
+          id="search"
+          class="search-input"
+          placeholder="Search name or city…"
+          autocomplete="off"
+          aria-label="Search by name or city"
+        />
+      </div>
+      <button id="directory-btn" class="directory-btn" type="button" title="Browse everyone">
+        <span class="directory-icon" aria-hidden="true">☰</span>
+        <span class="directory-label">Directory</span>
+      </button>
+      <button id="refresh-btn" class="refresh-btn" type="button" title="Refresh data">
+        <span class="refresh-icon" aria-hidden="true">⟳</span>
+        <span class="refresh-label">Refresh</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div id="map" class="map"></div>
+
+    <!-- Status overlay: loading / error -->
+    <div id="status" class="status-overlay" hidden>
+      <div class="status-card">
+        <div class="status-spinner" id="status-spinner"></div>
+        <p class="status-message" id="status-message">Loading classmates…</p>
+        <button id="status-retry" class="retry-btn" type="button" hidden>Try again</button>
+      </div>
+    </div>
+
+    <!-- City detail panel / bottom sheet -->
+    <aside id="panel" class="panel" aria-hidden="true">
+      <div class="panel-header">
+        <div class="panel-heading">
+          <h2 id="panel-city" class="panel-city">City</h2>
+          <span id="panel-count" class="panel-count">0 classmates</span>
+        </div>
+        <button id="panel-close" class="panel-close" type="button" aria-label="Close panel">×</button>
+      </div>
+      <ul id="panel-list" class="panel-list"></ul>
+    </aside>
+
+    <!-- Directory: everyone, alphabetical, searchable -->
+    <aside id="directory" class="panel panel-left" aria-hidden="true">
+      <div class="panel-header">
+        <div class="panel-heading">
+          <h2 class="panel-city">Directory</h2>
+          <span id="directory-count" class="panel-count">0 classmates</span>
+        </div>
+        <button id="directory-close" class="panel-close" type="button" aria-label="Close directory">×</button>
+      </div>
+      <div class="directory-search-wrap">
+        <input
+          type="search"
+          id="directory-search"
+          class="directory-search"
+          placeholder="Search names…"
+          autocomplete="off"
+          aria-label="Search the directory by name or city"
+        />
+      </div>
+      <ul id="directory-list" class="panel-list"></ul>
+    </aside>
+  </main>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <!-- PapaParse -->
+  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <script src="app.js"></script>
+</body>
+</html>
